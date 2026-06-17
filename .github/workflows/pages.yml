@@ -1,4 +1,4 @@
-name: GitHub Pages
+name: Build and deploy Hugo site to gh-pages
 
 on:
   push:
@@ -13,8 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: true
@@ -25,18 +27,17 @@ jobs:
         with:
           hugo-version: "latest"
 
-      - name: Build
+      - name: Build site
         run: hugo --minify
 
-      - name: Add .nojekyll
+      - name: Ensure .nojekyll
         run: |
           mkdir -p public
           touch public/.nojekyll
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
           publish_dir: ./public
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
